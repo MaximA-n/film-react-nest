@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { FilmsRepository } from '../films/films.repository';
+import { FilmsRepository } from '../repository/films.repository';
 import { CreateOrderDto, TicketDto } from './dto/order.dto';
 
 @Injectable()
