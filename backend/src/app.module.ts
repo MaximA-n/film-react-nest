@@ -20,13 +20,16 @@ import { Schedule } from './entities/schedule.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
+        type: configService.get<string>('DATABASE_DRIVER') as 'postgres',
+
+        host: configService.get<string>('DATABASE_HOST'),
+        port: configService.get<number>('DATABASE_PORT'),
+        database: configService.get<string>('DATABASE_NAME'),
+        username: configService.get<string>('DATABASE_USERNAME'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+
         entities: [Film, Schedule],
         synchronize: false,
-        extra: {
-          options: '-c client_encoding=UTF8',
-        },        
       }),
       inject: [ConfigService],
     }),
