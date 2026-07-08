@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as path from 'node:path';
 
 import { configProvider } from './app.config.provider';
-import { MongooseModule } from '@nestjs/mongoose';
 import { FilmsModule } from './films/films.module';
 import { OrderModule } from './order/order.module';
+import { Film } from './entities/film.entity';
+import { Schedule } from './entities/schedule.entity';
 
 @Module({
   imports: [
@@ -15,26 +17,29 @@ import { OrderModule } from './order/order.module';
       cache: true,
     }),
 
-    MongooseModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('DATABASE_URL'),
+        type: configService.get<string>('DATABASE_DRIVER') as 'postgres',
+
+        host: configService.get<string>('DATABASE_HOST'),
+        port: configService.get<number>('DATABASE_PORT'),
+        database: configService.get<string>('DATABASE_NAME'),
+        username: configService.get<string>('DATABASE_USERNAME'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+
+        entities: [Film, Schedule],
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
 
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', 'public'),
-      exclude: ['/api/(.*)'],
-      serveStaticOptions: {
-        index: false,
-        dotfiles: 'ignore',
-      },
     }),
 
     FilmsModule,
     OrderModule,
-    // @todo: Добавьте раздачу статических файлов из public
   ],
   controllers: [],
   providers: [configProvider],
