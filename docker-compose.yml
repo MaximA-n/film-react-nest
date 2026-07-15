@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: student
+      POSTGRES_PASSWORD: student
+      POSTGRES_DB: nest_project
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ghcr.io/maxima-n/film-react-nest-backend:latest
+    container_name: backend_container
+    environment:
+      DATABASE_DRIVER: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: nest_project
+      DATABASE_USERNAME: student
+      DATABASE_PASSWORD: student
+      PORT: 3000
+      LOGGER: json
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ghcr.io/maxima-n/film-react-nest-frontend:latest
+    container_name: frontend_container
+    volumes:
+      - frontend_dist:/app/dist
+    networks:
+      - app-network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: ghcr.io/maxima-n/film-react-nest-nginx:latest
+    container_name: nginx_container
+    ports:
+      - "80:80"
+    volumes:
+      - frontend_dist:/usr/share/nginx/html
+    networks:
+      - app-network
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  frontend_dist:
+
+networks:
+  app-network:
+    driver: bridge
+    
