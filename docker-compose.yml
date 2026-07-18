@@ -2,10 +2,11 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres_container
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: student
-      POSTGRES_PASSWORD: student
-      POSTGRES_DB: nest_project
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -14,9 +15,10 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin_container
+    restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - "8080:80"
     volumes:
@@ -32,15 +34,9 @@ services:
       dockerfile: Dockerfile
     image: ghcr.io/maxima-n/film-react-nest-backend:latest
     container_name: backend_container
-    environment:
-      DATABASE_DRIVER: postgres
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_NAME: nest_project
-      DATABASE_USERNAME: student
-      DATABASE_PASSWORD: student
-      PORT: 3000
-      LOGGER: json
+    restart: unless-stopped
+    env_file:
+      - .env.docker
     networks:
       - app-network
     depends_on:
@@ -52,6 +48,7 @@ services:
       dockerfile: Dockerfile
     image: ghcr.io/maxima-n/film-react-nest-frontend:latest
     container_name: frontend_container
+    restart: unless-stopped
     volumes:
       - frontend_dist:/app/dist
     networks:
@@ -63,6 +60,7 @@ services:
       dockerfile: Dockerfile
     image: ghcr.io/maxima-n/film-react-nest-nginx:latest
     container_name: nginx_container
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
